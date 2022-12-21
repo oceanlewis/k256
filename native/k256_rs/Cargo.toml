@@ -1,13 +1,15 @@
 [package]
-name = "k256"
+name = "k256_rs"
 version = "0.1.0"
 authors = []
-edition = "2018"
+edition = "2021"
 
 [lib]
-name = "k256"
+name = "k256_rs"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
 rustler = "0.26.0"
+k256 = "0.11.6"
+rand_core = { version = "0.6.4", features = ["getrandom"] }

@@ -8,7 +8,7 @@
 
 ```elixir
 defmodule K256 do
-  use Rustler, otp_app: :k256, crate: "k256"
+  use Rustler, otp_app: :k256, crate: "k256_rs"
 
   # When your NIF is loaded, it will override this function.
   def add(_a, _b), do: :erlang.nif_error(:nif_not_loaded)

@@ -9,15 +9,20 @@ with pkgs; let
       Foundation
     ]);
 
-  beamPackages = beam.packagesWith beam.interpreters.erlangR25;
 
-  buildInputs = [
-    elixir_1_14
-    elixir_ls
-    rust-bin.stable.latest.complete
-  ];
+  buildInputs =
+    let
+      beamPackages = beam.packagesWith beam.interpreters.erlangR25;
+      elixir = beamPackages.elixir_1_14;
+      elixir_ls = beamPackages.elixir_ls.override { inherit elixir; };
+    in
+    [
+      elixir
+      elixir_ls
+      rust-bin.stable.latest.complete
+      cargo-watch
+    ];
 
-  # define shell startup command
   shellHook = ''
     # Set up `mix` to save dependencies to the local directory
     mkdir -p .nix-mix

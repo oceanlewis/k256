@@ -125,7 +125,7 @@ mod schnorr {
 }
 
 rustler::init!(
-    "Elixir.K256",
+    "Elixir.K256.Native",
     [
         schnorr_generate_random_signing_key,
         schnorr_create_signature,

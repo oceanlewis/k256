@@ -11,39 +11,53 @@ mod atoms {
 type Ok = rustler::Atom;
 
 #[rustler::nif]
-fn schnorr_generate_random_signing_key() -> Vec<u8> {
-    schnorr::get_random_signing_key()
+fn schnorr_generate_random_signing_key(env: rustler::Env) -> rustler::Binary {
+    to_rustler_binary(env, schnorr::get_random_signing_key())
 }
 
 #[rustler::nif]
-fn schnorr_create_signature(
-    signing_key: Vec<u8>,
+fn schnorr_create_signature<'env>(
+    env: rustler::Env<'env>,
+    signing_key: rustler::Binary,
     contents: rustler::Binary,
-) -> Result<(Ok, Vec<u8>), rustler::Error> {
-    schnorr::create_signature(&signing_key, &contents)
-        .map_err(Into::into)
-        .map(|signature| (atoms::ok(), signature))
+) -> Result<(Ok, rustler::Binary<'env>), rustler::Error> {
+    match schnorr::create_signature(&signing_key, &contents) {
+        Ok(signature) => Ok((atoms::ok(), to_rustler_binary(env, signature))),
+        Err(error) => Err(error.into()),
+    }
 }
 
 #[rustler::nif]
-fn schnorr_verifying_key_from_signing_key(
-    signing_key: Vec<u8>,
-) -> Result<(Ok, Vec<u8>), rustler::Error> {
-    schnorr::verifying_key_from_signing_key(&signing_key)
-        .map_err(Into::into)
-        .map(|verifying_key| (atoms::ok(), verifying_key))
+fn schnorr_verifying_key_from_signing_key<'env>(
+    env: rustler::Env<'env>,
+    signing_key: rustler::Binary,
+) -> Result<(Ok, rustler::Binary<'env>), rustler::Error> {
+    match schnorr::verifying_key_from_signing_key(&signing_key) {
+        Ok(verifying_key) => Ok((atoms::ok(), to_rustler_binary(env, verifying_key))),
+        Err(error) => Err(error.into()),
+    }
 }
 
 #[rustler::nif]
 fn schnorr_validate_signature(
     message: rustler::Binary,
-    signature: Vec<u8>,
-    verifying_key: Vec<u8>,
+    signature: rustler::Binary,
+    verifying_key: rustler::Binary,
 ) -> Result<Ok, rustler::Error> {
     match schnorr::validate_signature(&message, &signature, &verifying_key) {
         Ok(_) => Ok(atoms::ok()),
         Err(error) => Err(error.into()),
     }
+}
+
+fn to_rustler_binary<T>(env: rustler::Env, t: T) -> rustler::Binary
+where
+    T: AsRef<[u8]>,
+{
+    let bytes = t.as_ref();
+    let mut binary = rustler::NewBinary::new(env, bytes.len());
+    binary.as_mut_slice().copy_from_slice(bytes);
+    rustler::Binary::from(binary)
 }
 
 mod schnorr {

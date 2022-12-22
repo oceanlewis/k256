@@ -22,6 +22,7 @@ defmodule K256.MixProject do
   defp deps do
     [
       {:rustler, "~> 0.26.0"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end

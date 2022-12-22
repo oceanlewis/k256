@@ -30,4 +30,50 @@ defmodule K256.SchnorrTest do
       assert :ok = Schnorr.validate_signature(message, signature, verifying_key)
     end
   end
+
+  describe "test-vectors.csv" do
+    @test_vectors File.read!("./test/resources/test-vectors.csv")
+                  |> NimbleCSV.RFC4180.parse_string()
+                  |> Enum.map(fn [
+                                   index,
+                                   secret_key,
+                                   public_key,
+                                   aux_rand,
+                                   message,
+                                   signature,
+                                   verification,
+                                   result
+                                 ] ->
+                    [
+                      index,
+                      Base.decode16!(secret_key),
+                      Base.decode16!(public_key),
+                      Base.decode16!(aux_rand),
+                      Base.decode16!(message),
+                      Base.decode16!(signature),
+                      case verification do
+                        "TRUE" -> true
+                        "FALSE" -> false
+                      end,
+                      result
+                    ]
+                  end)
+
+    test "test cases hold" do
+      validate = fn [
+                      index,
+                      secret_key,
+                      public_key,
+                      aux_rand,
+                      message,
+                      signature,
+                      verification,
+                      result
+                    ] ->
+        assert verification = Schnorr.validate_signature(message, signature, public_key)
+      end
+
+      Enum.each(@test_vectors, &validate.(&1))
+    end
+  end
 end

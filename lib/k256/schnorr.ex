@@ -34,9 +34,9 @@ defmodule K256.Schnorr do
     to: K256.Native,
     as: :schnorr_verifying_key_from_signing_key
 
-  @doc "Validates the signature of some content given a verifying key"
-  @spec validate_signature(
-          contents :: binary(),
+  @doc "Validates the signature of message given a signature and a verifying key"
+  @spec verify_message(
+          message :: binary(),
           signature :: signature(),
           verifying_key :: verifying_key()
         ) ::
@@ -44,7 +44,22 @@ defmodule K256.Schnorr do
           | {:error, :invalid_signature}
           | {:error, :signature_decoding_failed}
           | {:error, :verifying_key_decoding_failed}
-  defdelegate validate_signature(contents, signature, verifying_key),
+  defdelegate verify_message(message, signature, verifying_key),
     to: K256.Native,
-    as: :schnorr_validate_signature
+    as: :schnorr_verify_message
+
+  @doc "Validates a message digest given a signature and a verifying key"
+  @spec verify_message_digest(
+          message_digest :: binary(),
+          signature :: signature(),
+          verifying_key :: verifying_key()
+        ) ::
+          :ok
+          | {:error, :message_digest_invalid}
+          | {:error, :invalid_signature}
+          | {:error, :signature_decoding_failed}
+          | {:error, :verifying_key_decoding_failed}
+  defdelegate verify_message_digest(message_digest, signature, verifying_key),
+    to: K256.Native,
+    as: :schnorr_verify_message_digest
 end

@@ -19,7 +19,7 @@ defmodule K256.SchnorrTest do
       message = "This is some content to sign"
       assert {:ok, signature} = Schnorr.create_signature(@signing_key, message)
       assert {:ok, verifying_key} = Schnorr.verifying_key_from_signing_key(@signing_key)
-      assert :ok = Schnorr.validate_signature(message, signature, verifying_key)
+      assert :ok = Schnorr.verify_message(message, signature, verifying_key)
     end
 
     test "generating and validating a signature" do
@@ -27,7 +27,7 @@ defmodule K256.SchnorrTest do
       message = "This is some content to sign"
       assert {:ok, signature} = Schnorr.create_signature(signing_key, message)
       assert {:ok, verifying_key} = Schnorr.verifying_key_from_signing_key(signing_key)
-      assert :ok = Schnorr.validate_signature(message, signature, verifying_key)
+      assert :ok = Schnorr.verify_message(message, signature, verifying_key)
     end
   end
 
@@ -61,19 +61,25 @@ defmodule K256.SchnorrTest do
 
     test "test cases hold" do
       validate = fn [
-                      index,
-                      secret_key,
+                      _index,
+                      _secret_key,
                       public_key,
-                      aux_rand,
+                      _aux_rand,
                       message,
                       signature,
                       verification,
-                      result
+                      _result
                     ] ->
-        assert verification = Schnorr.validate_signature(message, signature, public_key)
+        result = Schnorr.verify_message_digest(message, signature, public_key)
+
+        case verification do
+          true -> assert :ok = result
+          false -> assert {:error, _} = result
+        end
       end
 
-      Enum.each(@test_vectors, &validate.(&1))
+      @test_vectors
+      |> Enum.map(&validate.(&1))
     end
   end
 end

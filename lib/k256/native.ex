@@ -14,7 +14,8 @@ defmodule K256.Native do
   def schnorr_generate_random_signing_key(), do: error()
   def schnorr_create_signature(_, _), do: error()
   def schnorr_verifying_key_from_signing_key(_), do: error()
-  def schnorr_validate_signature(_, _, _), do: error()
+  def schnorr_verify_message(_, _, _), do: error()
+  def schnorr_verify_message_digest(_, _, _), do: error()
 
   defp error(), do: :erlang.nif_error(:nif_not_loaded)
 end

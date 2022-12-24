@@ -5,6 +5,7 @@ mod atoms {
         verifying_key_decoding_failed,
         signature_decoding_failed,
         invalid_signature,
+        message_digest_invalid,
     }
 }
 
@@ -39,12 +40,29 @@ fn schnorr_verifying_key_from_signing_key<'env>(
 }
 
 #[rustler::nif]
-fn schnorr_validate_signature(
+fn schnorr_verify_message(
     message: rustler::Binary,
     signature: rustler::Binary,
     verifying_key: rustler::Binary,
 ) -> Result<Ok, rustler::Error> {
-    match schnorr::validate_signature(&message, &signature, &verifying_key) {
+    match schnorr::verify_message(&message, &signature, &verifying_key) {
+        Ok(_) => Ok(atoms::ok()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+#[rustler::nif]
+fn schnorr_verify_message_digest(
+    message_digest: rustler::Binary,
+    signature: rustler::Binary,
+    verifying_key: rustler::Binary,
+) -> Result<Ok, rustler::Error> {
+    let digest_bytes: &[u8; 32] = message_digest
+        .as_slice()
+        .try_into()
+        .map_err(|_| rustler::Error::Term(Box::new(atoms::message_digest_invalid())))?;
+
+    match schnorr::verify_message_digest(digest_bytes, &signature, &verifying_key) {
         Ok(_) => Ok(atoms::ok()),
         Err(error) => Err(error.into()),
     }
@@ -106,7 +124,7 @@ mod schnorr {
         Ok(verifying_key)
     }
 
-    pub fn validate_signature(
+    pub fn verify_message(
         message: &[u8],
         signature: &[u8],
         verifying_key: &[u8],
@@ -122,6 +140,23 @@ mod schnorr {
             Err(_) => Err(Error::InvalidSignature),
         }
     }
+
+    pub fn verify_message_digest(
+        message_digest: &[u8; 32],
+        signature: &[u8],
+        verifying_key: &[u8],
+    ) -> Result<(), Error> {
+        let verifying_key = VerifyingKey::from_bytes(&verifying_key)
+            .map_err(|_| Error::VerifyingKeyDecodingFailed)?;
+
+        let signature =
+            Signature::try_from(signature).map_err(|_| Error::SignatureDecodingFailed)?;
+
+        match verifying_key.verify_prehashed(message_digest, &signature) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Error::InvalidSignature),
+        }
+    }
 }
 
 rustler::init!(
@@ -130,6 +165,7 @@ rustler::init!(
         schnorr_generate_random_signing_key,
         schnorr_create_signature,
         schnorr_verifying_key_from_signing_key,
-        schnorr_validate_signature,
+        schnorr_verify_message,
+        schnorr_verify_message_digest,
     ]
 );

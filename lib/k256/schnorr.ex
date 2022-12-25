@@ -9,20 +9,20 @@ defmodule K256.Schnorr do
           | :signature_decoding_failed
           | :invalid_signature
 
-  @doc "Generates a random Signing Key"
+  @doc "Generates a random signing key"
   @spec generate_random_signing_key() :: signing_key()
   defdelegate generate_random_signing_key(),
     to: K256.Native,
     as: :schnorr_generate_random_signing_key
 
-  @doc "Creates an returns a signature of the given `contents` given a signing key"
+  @doc "Creates an returns a signature of the given message given a signing key"
   @spec create_signature(
-          signing_key :: signing_key(),
-          contents :: binary()
+          message :: binary(),
+          signing_key :: signing_key()
         ) ::
           {:ok, signature()}
           | {:error, :signing_key_decoding_failed}
-  defdelegate create_signature(signing_key, contents),
+  defdelegate create_signature(message, signing_key),
     to: K256.Native,
     as: :schnorr_create_signature
 

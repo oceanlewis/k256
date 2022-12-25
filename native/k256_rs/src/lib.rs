@@ -19,8 +19,8 @@ fn schnorr_generate_random_signing_key(env: rustler::Env) -> rustler::Binary {
 #[rustler::nif]
 fn schnorr_create_signature<'env>(
     env: rustler::Env<'env>,
-    signing_key: rustler::Binary,
     contents: rustler::Binary,
+    signing_key: rustler::Binary,
 ) -> Result<(Ok, rustler::Binary<'env>), rustler::Error> {
     match schnorr::create_signature(&signing_key, &contents) {
         Ok(signature) => Ok((atoms::ok(), to_rustler_binary(env, signature))),

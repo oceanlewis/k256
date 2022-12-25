@@ -17,7 +17,7 @@ defmodule K256.SchnorrTest do
 
     test "validating a signature" do
       message = "This is some content to sign"
-      assert {:ok, signature} = Schnorr.create_signature(@signing_key, message)
+      assert {:ok, signature} = Schnorr.create_signature(message, @signing_key)
       assert {:ok, verifying_key} = Schnorr.verifying_key_from_signing_key(@signing_key)
       assert :ok = Schnorr.verify_message(message, signature, verifying_key)
     end
@@ -25,7 +25,7 @@ defmodule K256.SchnorrTest do
     test "generating and validating a signature" do
       signing_key = Schnorr.generate_random_signing_key()
       message = "This is some content to sign"
-      assert {:ok, signature} = Schnorr.create_signature(signing_key, message)
+      assert {:ok, signature} = Schnorr.create_signature(message, signing_key)
       assert {:ok, verifying_key} = Schnorr.verifying_key_from_signing_key(signing_key)
       assert :ok = Schnorr.verify_message(message, signature, verifying_key)
     end
@@ -35,40 +35,32 @@ defmodule K256.SchnorrTest do
     @test_vectors File.read!("./test/resources/test-vectors.csv")
                   |> NimbleCSV.RFC4180.parse_string()
                   |> Enum.map(fn [
-                                   index,
-                                   secret_key,
+                                   _index,
+                                   _secret_key,
                                    public_key,
-                                   aux_rand,
+                                   _aux_rand,
                                    message,
                                    signature,
                                    verification,
-                                   result
+                                   _result
                                  ] ->
                     [
-                      index,
-                      Base.decode16!(secret_key),
                       Base.decode16!(public_key),
-                      Base.decode16!(aux_rand),
                       Base.decode16!(message),
                       Base.decode16!(signature),
                       case verification do
                         "TRUE" -> true
                         "FALSE" -> false
-                      end,
-                      result
+                      end
                     ]
                   end)
 
     test "test cases hold" do
       validate = fn [
-                      _index,
-                      _secret_key,
                       public_key,
-                      _aux_rand,
                       message,
                       signature,
-                      verification,
-                      _result
+                      verification
                     ] ->
         result = Schnorr.verify_message_digest(message, signature, public_key)
 
